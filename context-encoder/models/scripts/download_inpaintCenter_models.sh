@@ -3,7 +3,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../" && pwd )"
 cd $DIR
 
-FILE=inpaintCenterModels.tar.gz
+FILE=inpaintRandomModels.tar.gz
 URL=http://www.cs.berkeley.edu/~pathak/context_encoder/resources/$FILE
 CHECKSUM=632b1cfcc9bc59212c77ca138235d125
 

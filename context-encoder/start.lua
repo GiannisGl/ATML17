@@ -5,15 +5,15 @@ torch.setdefaulttensortype('torch.FloatTensor')
 
 opt = {
     batchSize = 30,        -- number of samples to produce
-    net = '',              -- path to the generator network
+    net = 'inpaintCenter/imagenet_inpaintCenter.t7',              -- path to the generator network
     name = 'test1',        -- name of the experiment and prefix of file saved
-    gpu = 1,               -- gpu mode. 0 = CPU, 1 = 1st GPU etc.
+    gpu = 0,               -- gpu mode. 0 = CPU, 1 = 1st GPU etc.
     nc = 3,                -- # of channels in input
     display = 1,           -- Display image: 0 = false, 1 = true
     loadSize = 0,          -- resize the loaded image to loadsize maintaining aspect ratio. 0 means don't resize. -1 means scale randomly between [0.5,2] -- see donkey_folder.lua
     fineSize = 128,        -- size of random crops
     nThreads = 1,          -- # of data loading threads to use
-    manualSeed = 0,        -- 0 means random seed
+    manualSeed = 222,        -- 0 means random seed
     useOverlapPred = 0,        -- overlapping edges (1 means yes, 0 means no). 1 means put 10x more L2 weight on unmasked region.
 
     -- Extra Options:
@@ -35,38 +35,11 @@ torch.manualSeed(opt.manualSeed)
 
 ---- load Context-Encoder
 --assert(opt.net ~= '', 'provide a generator model')
---net = util.load(opt.net, opt.gpu)
+--local net = torch.load(opt.net)
 --net:evaluate()
 
--- initialize variables
-input_image_ctx = torch.Tensor(opt.batchSize, opt.nc, opt.fineSize, opt.fineSize)
-local noise 
-if opt.noiseGen then
-    noise = torch.Tensor(opt.batchSize, opt.nz, 1, 1)
-    if opt.noisetype == 'uniform' then
-        noise:uniform(-1, 1)
-    elseif opt.noisetype == 'normal' then
-        noise:normal(0, 1)
-    end
-end
 
----- port to GPU
---if opt.gpu > 0 then
---    require 'cunn'
---    if pcall(require, 'cudnn') then
---        print('Using CUDNN !')
---        require 'cudnn'
---        net = util.cudnn(net)
---    end
---    net:cuda()
---    input_image_ctx = input_image_ctx:cuda()
---    if opt.noiseGen then
---        noise = noise:cuda()
---    end
---else
---   net:float()
---end
---print(net)
+--net:float()
 
 -- Generating random pattern
 local res = 0.06 -- the lower it is, the more continuous the output will be. 0.01 is too small and 0.1 is too large
@@ -81,11 +54,8 @@ pattern = pattern:byte()
 print('...Random pattern generated')
 
 -- load data
-local DataLoader = paths.dofile('data/data.lua')
-local data = DataLoader.new(opt.nThreads, opt)
-print("Dataset Size: ", data:size())
-local image_ctx = data:getBatch()
-print('Loaded Image Block: ', image_ctx:size(1)..' x '..image_ctx:size(2) ..' x '..image_ctx:size(3)..' x '..image_ctx:size(4))
+local image_ctx = image.load("./images/imagenet/001_im.png", 3, 'float')
+print('Loaded Image Block: ', image_ctx:size(1)..' x '..image_ctx:size(2) ..' x '..image_ctx:size(3))
 
 -- get random mask
 local mask, wastedIter
@@ -102,16 +72,16 @@ while true do
     wastedIter = wastedIter + 1
 end
 mask=torch.repeatTensor(mask,opt.batchSize,1,1)
-print(image_ctx:size())
-print(mask:size())
 
 -- original input image
 real_center = image_ctx:clone() -- copy by value
+print(image_ctx:size())
+print(mask:size())
 
 -- fill masked region with mean value
-image_ctx[{{},{1},{},{}}][mask] = 2*117.0/255.0 - 1.0
-image_ctx[{{},{2},{},{}}][mask] = 2*104.0/255.0 - 1.0
-image_ctx[{{},{3},{},{}}][mask] = 2*123.0/255.0 - 1.0
+image_ctx[{{},{1},{}}][mask] = 2*117.0/255.0 - 1.0
+image_ctx[{{},{2},{}}][mask] = 2*104.0/255.0 - 1.0
+image_ctx[{{},{3},{}}][mask] = 2*123.0/255.0 - 1.0
 input_image_ctx:copy(image_ctx)
 
 -- run Context-Encoder to inpaint center
