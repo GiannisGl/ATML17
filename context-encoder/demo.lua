@@ -7,7 +7,7 @@ opt = {
     net = '',              -- path to the generator network
     imDir = '',            -- directory containing pred_center 
     name = 'demo_out',     -- name of the file saved
-    gpu = 1,               -- gpu mode. 0 = CPU, 1 = 1st GPU etc.
+    gpu = 0,               -- gpu mode. 0 = CPU, 1 = 1st GPU etc.
     nc = 3,                -- # of channels in input
     manualSeed = 0,        -- 0 means random seed
     overlapPred = 0,       -- overlapping edges of center with context
