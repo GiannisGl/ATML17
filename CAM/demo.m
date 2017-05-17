@@ -34,7 +34,7 @@ end
 
 %% Class Activation Mapping
 
-topNum = 5; % generate heatmap for top X prediction results
+topNum = 1; % generate heatmap for top X prediction results
 scoresMean = mean(scores,2);
 [value_category, IDX_category] = sort(scoresMean,'descend');
 [curCAMmapAll] = returnCAMmap(activation_lastconv, weights_LR(:,IDX_category(1:topNum)));
