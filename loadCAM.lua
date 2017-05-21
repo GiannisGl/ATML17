@@ -1,3 +1,8 @@
+require 'loadcaffe'
+require 'cudnn'
+require 'image'
+
+
 torch.setdefaulttensortype('torch.DoubleTensor')
 
 model = loadcaffe.load('CAM/models/deploy_alexnetplusCAM_imagenet.prototxt', 'CAM/models/alexnetplusCAM_imagenet.caffemodel', 'cudnn')
