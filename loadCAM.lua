@@ -1,7 +1,3 @@
-require 'loadcaffe'
-require 'cudnn'
-require 'image'
-
 torch.setdefaulttensortype('torch.DoubleTensor')
 
 model = loadcaffe.load('CAM/models/deploy_alexnetplusCAM_imagenet.prototxt', 'CAM/models/alexnetplusCAM_imagenet.caffemodel', 'cudnn')
@@ -10,7 +6,6 @@ model = loadcaffe.load('CAM/models/deploy_alexnetplusCAM_imagenet.prototxt', 'CA
 model:insert(nn.Squeeze(),22)
 model:cuda()
 print(model)
-
 
 --torch.save("alexnetplusCAM.torchmodel", model)
 

@@ -1,3 +1,4 @@
 context-encoder/inpaintCenter/
 context-encoder/inpaintCenterModels.tar.gz
+*.torchmodel
 
