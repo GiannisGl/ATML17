@@ -13,11 +13,6 @@ print(model)
 
 --torch.save("alexnetplusCAM.torchmodel", model)
 
--- They don't have hdf5 installed
---local myFile = hdf5.open('CAM/prepinput.h5', 'r')
---local data = myFile:read('/data'):all()
---myFile.close()
-
 data = image.load("CAM/dataset/new/001_im_prep.png", 3, "double")
 
 -- convert to GPU
@@ -26,4 +21,18 @@ data = data:cuda()
 --data = torch.load('CAM/prepinput.dat')
 
 output = model:forward(data)
-print(output)
+
+-- Extract and save softmax weights
+local mod = model.modules
+local weights_LR = mod[23].weight
+print(weights_LR:size())
+torch.save('weights_LR.dat',weights_LR)
+
+-- Extract and save CAM output
+local cam = mod[13].output
+print(cam:size())
+torch.save('cam.dat', cam)
+
+--print(output)
+print(output:size())
+torch.save('output.dat', output)
