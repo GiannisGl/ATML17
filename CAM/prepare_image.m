@@ -5,7 +5,7 @@ function crops_data = prepare_image(im)
 d = load('ilsvrc_2012_mean.mat');
 mean_data = d.mean_data;
 IMAGE_DIM = 256;
-CROPPED_DIM = 224; % 224 for googLeNet , 227 for VGG and AlexNet
+CROPPED_DIM = 227; % 224 for googLeNet , 227 for VGG and AlexNet
 
 % Convert an image returned by Matlab's imread to im_data in caffe's data
 % format: W x H x C with BGR channels

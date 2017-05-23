@@ -1,4 +1,7 @@
 context-encoder/inpaintCenter/
 context-encoder/inpaintCenterModels.tar.gz
 *.torchmodel
+dataset/Flickr32
+dataset/Flickr32prep
+*.t7
 
