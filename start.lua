@@ -1,146 +1,206 @@
+require 'loadcaffe'
+require 'cudnn'
 require 'image'
 require 'nn'
-torch.setdefaulttensortype('torch.FloatTensor')
+require 'optim'
 
-opt = {
-    batchSize = 1,        -- number of samples to produce
-    net = 'inpaintCenter/imagenet_inpaintCenter.t7',              -- path to the generator network
-    imDir = 'images/new',            -- directory containing pred_center 
-    name = 'imagenet_result',     -- name of the file saved
-    gpu = 0,               -- gpu mode. 0 = CPU, 1 = 1st GPU etc.
-    nc = 3,                -- # of channels in input
-    manualSeed = 222,        -- 0 means random seed
-    overlapPred = 4,       -- overlapping edges of center with context
-    display = 1,
-    fineSize = 128,        -- size of random crops
-    nThreads = 1          -- # of data loading threads to use
+--model = loadcaffe.load('CAM/models/deploy_alexnetplusCAM_imagenet.prototxt', 'CAM/models/alexnetplusCAM_imagenet.caffemodel', 'cudnn')
+model = torch.load("alexnetplusCAMnnFlickr.torchmodel")
+
+--cudnn.convert(model, nn)
+--model:double()
+--model:remove(5)
+--model:insert(nn.SpatialConvolution(96, 256, 5,5,1,1,2,2),5)
+--model:remove(11)
+--model:insert(nn.SpatialConvolution(384,384,3,3,1,1,1,1),11)
+--model:remove(13)
+--model:insert(nn.SpatialConvolution(384,384,3,3,1,1,1,1),13)
+--model:remove(16)
+--model:insert(nn.SpatialConvolution(384,512,3,3,1,1,1,1),16)
+--model:remove(18)
+--model:insert(nn.SpatialConvolution(512,512,3,3,1,1,1,1),18)
+--model:remove(20)
+--model:insert(nn.SpatialAveragePooling(11,11,11,11),20)
+--model:insert(nn.Squeeze(), 22)
+--model:remove(23)
+--model:insert(nn.Linear(512,1))
+--model:insert(nn.Sigmoid())
+
+--torch.save("alexnetplusCAMnnFlickr.torchmodel", model)
+--print(model)
+
+-- load dataset
+dataset = torch.load("datasetFlickr32_20.t7")
+print("dataset loaded successfuly with size:")
+dataSize = dataset:size()
+--dataSize = torch.Tensor(dataSize)
+print("dataset size: "..tostring(dataset:size()))
+print(torch.type(dataSize))
+
+-- create datasets
+seed = 1234
+torch.manualSeed(seed)
+shuffleIdx = torch.randperm(dataSize)
+trainpercent = 0.6
+valpercent = 0.2
+testpercent = 0.2
+mintrainIdx = 1
+maxtrainIdx = torch.floor(dataSize*trainpercent)
+minvalIdx = maxtrainIdx+1
+maxvalIdx = maxtrainIdx+torch.floor(dataSize*valpercent)
+mintestIdx = maxvalIdx+1
+maxtestIdx = dataSize
+
+-- create train dataset
+trainset = {}
+for i = 1,maxtrainIdx do
+      table.insert(trainset,dataset[shuffleIdx[i]])
+end
+function trainset:size() return #trainset end
+
+-- create val dataset
+valset = {}
+for i = minvalIdx,maxvalIdx do
+      table.insert(valset,dataset[shuffleIdx[i]])
+end
+function valset:size() return #valset end
+
+--create test dataset
+testset = {}
+for i = mintestIdx,maxtestIdx do
+      table.insert(testset,dataset[shuffleIdx[i]])
+end
+function testset:size() return #testset end
+
+print("train dataset size: "..tostring(trainset:size()))
+print("val dataset size: "..tostring(valset:size()))
+print("test dataset size: "..tostring(testset:size()))
+
+imgsize = dataset[1][1]:size()
+channels = imgsize[1]
+imgwidth = imgsize[2]
+imgheight = imgsize[3]
+
+
+-- choose criterion
+criterion = nn.BCECriterion()
+
+-- define the descent algorithm
+sgd_params = {
+   learningRate = 1e-2,
+   learningRateDecay = 1e-4,
+   weightDecay = 1e-3,
+   momentum = 1e-4
 }
-for k,v in pairs(opt) do opt[k] = tonumber(os.getenv(k)) or os.getenv(k) or opt[k] end
-print(opt)
 
--- set seed
-if opt.manualSeed == 0 then
-    opt.manualSeed = torch.random(1, 10000)
-end
-print("Seed: " .. opt.manualSeed)
-torch.manualSeed(opt.manualSeed)
+x, dl_dx = model:getParameters()
 
--- load Context-Encoder
-assert(opt.net ~= '', 'provide a generator model')
-net = torch.load(opt.net)
-net:apply(function(m) if m.weight then 
-    m.gradWeight = m.weight:clone():zero(); 
-    m.gradBias = m.bias:clone():zero(); end end)
-net:evaluate()
+-- step function
+step = function(batch_size)
+    local current_loss = 0
+    local shuffle = torch.randperm(trainset:size())
+    batch_size = batch_size or 200
+    
+    for t = 1,trainset:size(),batch_size do
+        -- setup inputs for this mini-batch
+        -- no need to setup targets, since they are the same
+        local size = math.min(t + batch_size - 1, trainset:size()) - t
+        local inputs = torch.Tensor(size, channels, imgwidth, imgheight)
+        local targets = torch.Tensor(size)
+        for i = 1,size do
+            inputs[i] = torch.Tensor(trainset[shuffle[i+t]][1])
+        end
+        for i = 1,size do
+            targets[i] = torch.Tensor(trainset[shuffle[i+t]][2])
+        end
+        
+        local feval = function(x_new)
+            -- reset data
+            if x ~= x_new then x:copy(x_new) end
+            dl_dx:zero()
 
--- initialize variables
-inputSize = 128
-image_ctx = torch.Tensor(opt.batchSize, opt.nc, inputSize, inputSize)
-input_image_ctx = torch.Tensor(opt.batchSize, opt.nc, inputSize, inputSize)
+            -- perform mini-batch gradient descent
+            local loss = criterion:forward(model:forward(inputs), targets)
+            model:backward(inputs, criterion:backward(model.output, targets))
 
--- port to GPU
-if opt.gpu > 0 then
-    require 'cunn'
-    net:cuda()
-    input_image_ctx = input_image_ctx:cuda()
-else
-   net:float()
-end
-print(net)
-
--- load data
-for i=1,opt.batchSize do
-    local imPath = string.format(opt.imDir.."/%03d_im.png",i)
-    local input = image.load(imPath, nc, 'float')
-    input = image.scale(input, inputSize, inputSize)
-    input:mul(2):add(-1)
-    image_ctx[i]:copy(input)
-end
-print('Loaded Image Block: ', image_ctx:size(1)..' x '..image_ctx:size(2) ..' x '..image_ctx:size(3)..' x '..image_ctx:size(4))
-
-
--- Generating random pattern
-local res = 0.06 -- the lower it is, the more continuous the output will be. 0.01 is too small and 0.1 is too large
-local density = 0.25
-local MAX_SIZE = 10000
-local low_pattern = torch.Tensor(res*MAX_SIZE, res*MAX_SIZE):uniform(0,1):mul(255)
-local pattern = image.scale(low_pattern, MAX_SIZE, MAX_SIZE,'bicubic')
-low_pattern = nil
-pattern:div(255);
-pattern = torch.lt(pattern,density):byte()  -- 25% 1s and 75% 0s
-pattern = pattern:byte()
-print('...Random pattern generated')
-
--- get random mask
-local mask, wastedIter
-wastedIter = 0
-while true do
-    local x = torch.uniform(1, MAX_SIZE-opt.fineSize)
-    local y = torch.uniform(1, MAX_SIZE-opt.fineSize)
-    mask = pattern[{{y,y+opt.fineSize-1},{x,x+opt.fineSize-1}}]  -- view, no allocation
-    local area = mask:sum()*100./(opt.fineSize*opt.fineSize)
-    if area>20 and area<30 then  -- want it to be approx 75% 0s and 25% 1s
-        -- print('wasted tries: ',wastedIter)
-        break
+            return loss, dl_dx
+        end
+        
+        _, fs = optim.sgd(feval, x, sgd_params)
+        -- fs is a table containing value of the loss function
+        -- (just 1 value for the SGD optimization)
+        current_loss = current_loss + fs[1]
     end
-    wastedIter = wastedIter + 1
-end
-mask=torch.repeatTensor(mask,opt.batchSize,1,1)
-print(image_ctx:size())
-print(mask:size())
 
--- original input image
-real_center = image_ctx:clone() -- copy by value
-
--- fill masked region with mean value
-image_ctx[{{},{1},{},{}}][mask] = 2*117.0/255.0 - 1.0
-image_ctx[{{},{2},{},{}}][mask] = 2*104.0/255.0 - 1.0
-image_ctx[{{},{3},{},{}}][mask] = 2*123.0/255.0 - 1.0
-input_image_ctx:copy(image_ctx)
-
-print("ctx size")
-print(image_ctx:size())
-
--- run Context-Encoder to inpaint center
-pred_center = net:forward(input_image_ctx)
-print('Prediction: size: ', pred_center:size(1)..' x '..pred_center:size(2) ..' x '..pred_center:size(3)..' x '..pred_center:size(4))
-print('Prediction: Min, Max, Mean, Stdv: ', pred_center:min(), pred_center:max(), pred_center:mean(), pred_center:std())
-
--- paste predicted region in the context
-image_ctx[{{},{1},{},{}}][mask] = pred_center[{{},{1},{},{}}][mask]:float()
-image_ctx[{{},{2},{},{}}][mask] = pred_center[{{},{2},{},{}}][mask]:float()
-image_ctx[{{},{3},{},{}}][mask] = pred_center[{{},{3},{},{}}][mask]:float()
-
--- re-transform scale back to normal
-input_image_ctx:add(1):mul(0.5)
-image_ctx:add(1):mul(0.5)
-pred_center:add(1):mul(0.5)
-real_center:add(1):mul(0.5)
-
-if opt.display then
-    disp = require 'display'
-    disp.image(pred_center, {win=1000, title=opt.name})
-    -- disp.image(real_center, {win=1001, title=opt.name})
-    disp.image(image_ctx, {win=1002, title=opt.name})
-    print('Displayed image in browser !')
+    return current_loss
 end
 
+-- evaluation function on a seperate dataset
+eval = function(dataset, batch_size)
+    local loss = 0
+    batch_size = batch_size or 200
+    
+    for t = 1,dataset:size(),batch_size do
+        local size = math.min(t + batch_size - 1, dataset:size()) - t
+        local inputs = torch.Tensor(batch_size, channels, imgwidth, imgheight)
+        local targets = torch.Tensor(batch_size)
+        for i = 1,size do
+            inputs[i] = torch.Tensor(dataset[i+t][1])
+        end
+        for i = 1,size do
+            targets[i] = torch.Tensor(dataset[i+t][2])
+        end
+        local outputs = model:forward(inputs)
+        loss = loss + criterion:forward(model:forward(inputs), targets)
+    end
 
----- save outputs
--- image.save(opt.name .. '_predWithContext.png', image.toDisplayTensor(image_ctx))
--- image.save(opt.name .. '_realCenter.png', image.toDisplayTensor(real_center))
--- image.save(opt.name .. '_predCenter.png', image.toDisplayTensor(pred_center))
-
--- save outputs in a pretty manner
-real_center=nil; pred_center=nil;
-pretty_output = torch.Tensor(2*opt.batchSize, opt.nc, opt.fineSize, opt.fineSize)
-input_image_ctx[{{},{1},{},{}}][mask] = 1.0
-input_image_ctx[{{},{2},{},{}}][mask] = 1.0
-input_image_ctx[{{},{3},{},{}}][mask] = 1.0
-for i=1,opt.batchSize do
-    pretty_output[2*i-1]:copy(input_image_ctx[i])
-    pretty_output[2*i]:copy(image_ctx[i])
+    return loss
 end
-image.save(opt.name .. '.png', image.toDisplayTensor(pretty_output))
-print('Saved predictions to: ./', opt.name .. '.png')
---image.display(image.toDisplayTensor(pretty_output))
+
+max_iters = 30
+
+-- train the model
+do
+    local last_loss = 0
+    local increasing = 0
+    local threshold = 1 -- how many increasing epochs we allow
+    for i = 1,max_iters do
+        local loss = step()
+        print(string.format('Epoch: %d Current loss: %4f', i, loss))
+        local validation_loss = eval(valset)
+        print(string.format('Loss on the validation set: %4f', validation_loss))
+        if last_loss < validation_loss then
+            if increasing > threshold then break end
+            increasing = increasing + 1
+        else
+            increasing = 0
+        end
+        last_loss = validation_loss
+    end
+end
+
+-- test accuracy on the test dataset
+eval(testset)
+
+
+---- test accuracy
+--threshold = 0.5
+--correct = 0
+--for i=1,n_test do
+--    local groundtruth = test_labels[i]
+--    local probability = model:forward(test_feats[i])
+--    local prediction = probability:gt(threshold):double()
+----     if i == 1 then
+----         print("prob= ", probability[1])
+----         print("prediction= ", prediction[1])
+----         print("true label= ", groundtruth[1])
+----     end
+--    if groundtruth[1] == prediction[1] then
+--        correct = correct + 1
+--    end
+--end
+
+--accuracy = 100*correct/n_test
+
+--print(correct,  accuracy.. ' % ')
+

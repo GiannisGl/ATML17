@@ -1,6 +1,6 @@
 clear all;
-source_folder = "../dataset/Flickr32/classes/jpg/";
-dest_folder = "../dataset/Flickr32prep/classes/jpg/";
+source_folder = "dataset/Flickr32/classes/jpg/";
+dest_folder = "dataset/Flickr32prep/classes/jpg/";
 
 dirs = dir(source_folder);
 dirNames = {dirs([dirs.isdir]).name};
@@ -10,7 +10,7 @@ for i=1:length(dirNames)
     subdir = cell2mat(dirNames(1,i));
     curdir = strcat(source_folder,subdir,"/")
     destdir = strcat(dest_folder,subdir,"/");
-%    mkdir(destdir);
+    mkdir(destdir);
     files = dir(curdir);
     fileNames = {files.name};
     fileNames = fileNames(~ismember(fileNames,{'.','..'}));

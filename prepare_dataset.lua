@@ -6,18 +6,18 @@ datasetfolder = "dataset/Flickr32prep/classes/jpg"
 function prepare_dataset(folder)
     dataset = {}
     for dir in lfs.dir(folder) do
---      if #dataset > 20 then break end
+      if #dataset >= 20 then break end
       if dir ~= '.' and dir ~= '..' then
         curdir = folder.."/"..dir
         print(curdir)
         for file in lfs.dir(curdir) do
---          if #dataset >= 20 then break end
+          if #dataset >= 20 then break end
           if file ~= '.' and file ~= '..' then
             curfile = curdir.."/"..file
             print(curfile)
             label = torch.Tensor(1)
             label[1] = 1
-            if dir == "no-logo" then
+            if string.find(dir, 'no-logo') then
               label[1] = 0
             end
             imgtmp = image.load(curfile, 3, "double")
@@ -48,6 +48,6 @@ end
 
 dataset = prepare_dataset(datasetfolder)
 print(dataset:size())
-torch.save( "datasetFlickr32full.t7", dataset )
+torch.save( "datasetFlickr32_20.t7", dataset )
 
 
