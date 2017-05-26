@@ -20,8 +20,7 @@
 ## @end deftypefn
 
 ## Author: giannis <giannis@giannis-Lenovo>
-## Created: 2017-05-26
-
+## Created: 2017-05-27
 
 function done = create_sub_dataset(dname, destfolder, txtfile)
       fname=fullfile(dname,txtfile);
@@ -29,7 +28,7 @@ function done = create_sub_dataset(dname, destfolder, txtfile)
       C = textscan(fid,'%s');
       fclose(fid);
       paths = C{1,1};
-      disp(txtfile);
+      disp(destfolder);
       [m,~] = size(paths)
       paths{2,1}
       mkdir(destfolder);
