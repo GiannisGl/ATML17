@@ -8,8 +8,8 @@ dirNames = dirNames(~ismember(dirNames,{'.','..'}));
 
 for i=1:length(dirNames)
     subdir = cell2mat(dirNames(1,i));
-    curdir = strcat(source_folder,subdir,"/")
-    destdir = strcat(dest_folder,subdir,"/");
+    curdir = strcat(source_folder,subdir,'/')
+    destdir = strcat(dest_folder,subdir,'/');
     mkdir(destdir);
     files = dir(curdir);
     fileNames = {files.name};
@@ -23,7 +23,7 @@ for i=1:length(dirNames)
       end
       imgprep = prepare_image(imgtmp);
       for l=1:10
-          destfile = strcat(destdir, name, l);
+          destfile = strcat(destdir, int2str(l), '_', name);
           imwrite(imgprep(:,:,:,l), destfile,'jpg');      
       end
     end

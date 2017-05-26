@@ -1,7 +1,6 @@
 require 'lfs'
 require 'image'
 
-datasetfolder = "dataset/Flickr32prep/classes/jpg"
 
 function prepare_dataset(folder)
     dataset = {}
@@ -45,9 +44,11 @@ end
 --for i, v in ipairs(list) do
 --    print(i .. " , " .. v)
 --end
-
+case = "train"
+datasetfolder = "dataset/Flickr32seperated/"..case.."/classes/jpg"
 dataset = prepare_dataset(datasetfolder)
-print(dataset:size())
+dataSize = dataset:size()
+print(dataSize)
 torch.save( "datasetFlickr32_20.t7", dataset )
 
 

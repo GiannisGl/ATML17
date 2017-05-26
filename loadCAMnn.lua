@@ -64,8 +64,8 @@ print(trainIndices:size())
 --threshold = 0.5
 --correct = 0
 --for i=1,n_test do
---    local groundtruth = test_labels[i]
---    local probability = model:forward(test_feats[i])
+--    local groundtruth = testset[i][2]
+--    local probability = model:forward(testest[i][1])
 --    local prediction = probability:gt(threshold):double()
 ----     if i == 1 then
 ----         print("prob= ", probability[1])

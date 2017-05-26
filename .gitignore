@@ -5,4 +5,5 @@ dataset/Flickr32
 dataset/Flickr32prep
 *.t7
 Flickr*
+jobs_ids.txt
 
