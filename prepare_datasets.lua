@@ -31,24 +31,27 @@ function prepare_dataset(folder)
    return dataset
 end
 
---list= {}
---list[0] = 1
---list[1] = 2
---list[2] = 3
---list[3] = 3
---list[3] = 4
---list[5] = 2
---list[6] = 3
---list[4] = 2
-
---for i, v in ipairs(list) do
---    print(i .. " , " .. v)
---end
 case = "train"
-datasetfolder = "dataset/Flickr32seperated/"..case.."/classes/jpg"
+datasetfolder = "dataset/Flickr32separatedFullAugmentedPrep/"..case.."/classes/jpg"
 dataset = prepare_dataset(datasetfolder)
 dataSize = dataset:size()
 print(dataSize)
-torch.save( "datasetFlickr32_20.t7", dataset )
+torch.save( "datasetFlickr32"..case..".t7", dataset )
+
+
+case = "val"
+datasetfolder = "dataset/Flickr32separatedFullAugmentedPrep/"..case.."/classes/jpg"
+dataset = prepare_dataset(datasetfolder)
+dataSize = dataset:size()
+print(dataSize)
+torch.save( "datasetFlickr32"..case..".t7", dataset )
+
+
+case = "test"
+datasetfolder = "dataset/Flickr32separatedFullAugmentedPrep/"..case.."/classes/jpg"
+dataset = prepare_dataset(datasetfolder)
+dataSize = dataset:size()
+print(dataSize)
+torch.save( "datasetFlickr32"..case..".t7", dataset )
 
 
