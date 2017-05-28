@@ -5,21 +5,21 @@ require 'sys'
 
 --torch.setdefaulttensortype('torch.DoubleTensor')
 
---model = loadcaffe.load('CAM/models/deploy_alexnetplusCAM_imagenet.prototxt', 'CAM/models/alexnetplusCAM_imagenet.caffemodel', 'cudnn')
+model = loadcaffe.load('CAM/models/deploy_alexnetplusCAM_imagenet.prototxt', 'CAM/models/alexnetplusCAM_imagenet.caffemodel', 'cudnn')
 ----model = loadcaffe.load('CAM/models/deploy_googlenetCAM.prototxt', 'CAM/models/imagenet_googleletCAM_train_iter_120000.caffemodel', 'cudnn')
 ----model = torch.load("alexnetplusCAM.torchmodel")
---model:insert(nn.Squeeze(),22)
+model:insert(nn.Squeeze(),22)
 --model:remove(23)
 --model:insert(nn.Linear(512,1))
 --model:insert(nn.Sigmoid())
---cudnn.convert(model, cudnn)
+cudnn.convert(model, cudnn)
 --model:cuda()
---print(model)
+print(model)
 
---torch.save("alexnetplusCAMFlicr32CUDA.torchmodel", model)
+torch.save("alexnetplusCAMCUDA.torchmodel", model)
 
 
---data = image.load("CAM/dataset/new/001_im_prep.png", 3, "double")
+--data = image.load("CAM/dataset/Flickr32prepOriginal/classes/jpg/starbucks/4871375996.jpg", 3, "double")
 
 ---- convert to GPU
 --cutorch.setDevice(1)

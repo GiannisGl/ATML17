@@ -11,18 +11,9 @@ resultfolderpath = 'myresults'
 -- CAM Creation helper functions
 function create_CAM(lastconv, weights_LR)
 	local lastconv_reshaped = torch.reshape(lastconv, lastconv:size(2)*lastconv:size(3), lastconv:size(1))
-  local weights_LRtmp2 = weights_LR[{{}}]
-  local weights_LRtmp = weights_LRtmp2:t()
-  print('weights size')
-  print(weights_LR:size())
-  print('lastconv reshaped size')
-  print(lastconv_reshaped:size())
-	local detectionMap = torch.mm(lastconv_reshaped,weights_LRtmp)
-  print('detectionMap size')
-  print(detectionMap:size())
-	local cam = torch.reshape(detectionMap[{{},859}], lastconv:size(2), lastconv:size(3))
-  print('cam size')
-  print(cam:size())
+  local weights_LRtmp = weights_LR[{859,{}}]
+	local detectionMap = torch.mv(lastconv_reshaped,weights_LRtmp)
+	local cam = torch.reshape(detectionMap, lastconv:size(2), lastconv:size(3))
 	return cam
 end
 
@@ -33,37 +24,30 @@ function colourize_CAM(incam)
   local cam256 = torch.mul(camnorm, 256)
   local camceil = torch.ceil(cam256)
   camceil[camceil:lt(0.01)] = 0.01
-  
-  print(camceil:size())
-  print(camceil:max())
-  print(camceil:min())
 	local outcam = image.y2jet(camceil)
+  outcam = camnorm
 	return outcam
 end
 
-function prepareCAM(file,model)
+function prepareCAM(data,model)
 --  file = 'CAM/img2prep.jpg'
 	mod = model.modules
   -- forward Data			
-  data = image.load(file, 3, "double")
   img = data:clone()
   model:forward(data)
 
   -- Get CAM Data
   weights_LR = mod[23].weight:double()
-  print('weights size')
-  print(weights_LR:size())
   lastconv = mod[18].output:double()
-  print('lastconv size')
-  print(lastconv:size())
   cam = create_CAM(lastconv, weights_LR)
 
   -- Create CAM
   cam = image.scale(cam, img:size(2), img:size(3))
-  print('cam size')
-  print(cam:size())
---  print(cam)
   cam = colourize_CAM(cam)
+--  threshold = 0.7
+--  cam[cam:lt(threshold)]=0
+--  cam[cam:ge(threshold)]=1
+  cam = torch.repeatTensor(cam, 3,1,1)
   img_out = torch.add(torch.mul(img,0.3),torch.mul(cam,0.7))
   
   return img_out
@@ -80,15 +64,15 @@ function get_CAM_from_data(infolder, outfolder, modelpath)
 		  print(curdir)
       i = 1
 		  for file in lfs.dir(curdir) do
-        if i>10 then break end
+        if i>1 then break end
 			if file ~= '.' and file ~= '..' then
         i = i+1
 				curfile = curdir.."/"..file
 				print(curfile)
-				
-				img_out = prepareCAM(curfile,model)
---        image.display(img_out)
-				--img_out = cam
+        data = image.load(curfile, 3, "double")
+--        data:mul(255):floor()
+--        print(data)
+				img_out = prepareCAM(data,model)
 				image.save(outfolder.."/"..file,img_out)
 			end
 		  end
