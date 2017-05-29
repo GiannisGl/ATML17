@@ -14,9 +14,15 @@ model:insert(nn.Squeeze(),22)
 --model:insert(nn.Sigmoid())
 cudnn.convert(model, cudnn)
 --model:cuda()
-print(model)
+--print(model)
 
-torch.save("alexnetplusCAMCUDA.torchmodel", model)
+--torch.save("alexnetplusCAMCUDA.torchmodel", model)
+
+table = {}
+table[1] = {'bla'}
+table[2] = {'ble'}
+table2 = table:clone()
+print(table2)
 
 
 --data = image.load("CAM/dataset/Flickr32prepOriginal/classes/jpg/starbucks/4871375996.jpg", 3, "double")

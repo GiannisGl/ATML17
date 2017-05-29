@@ -19,7 +19,7 @@ wh_diff = box_coords(3)-box_coords(4);
 x_shift = ceil(min(wh_diff/2,0));
 y_shift = -ceil(max(wh_diff/2,0));
 box_x = box_x+x_shift;
-box_y = box_y+x_shift;
+box_y = box_y+y_shift;
 
 % the image has to be 128x128 and the box 64x64
 out_img_size = 2*box_size;
@@ -33,7 +33,7 @@ img_h = size(img,1);
 img_part_xl = max(box_x-0.5*box_size,0);
 img_part_xr = min(box_x+1.5*box_size,img_w);
 img_part_yt = max(box_y-0.5*box_size,0);
-img_part_yb = min(box_x+1.5*box_size,img_h);
+img_part_yb = min(box_y+1.5*box_size,img_h);
 img_part = img(img_part_yt:img_part_yb, img_part_xl:img_part_xr, :);
 
 % resize the image
