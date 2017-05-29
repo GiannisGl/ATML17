@@ -7,4 +7,5 @@ dataset/Flickr32prep
 Flickr*
 jobs_ids.txt
 results/*
+myresults/*
 context-encoder/octave-workspace

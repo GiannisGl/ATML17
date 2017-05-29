@@ -31,8 +31,10 @@ img_w = size(img,2);
 img_h = size(img,1);
 % get part with logo in center (but limited with image boundaries, if the logo is on the edge)
 img_part_xl = max(box_x-0.5*box_size,0);
+% img_part_xl = max(box_x-0.5*box_size,1); % for octave min is 1
 img_part_xr = min(box_x+1.5*box_size,img_w);
 img_part_yt = max(box_y-0.5*box_size,0);
+%img_part_yt = max(box_y-0.5*box_size,1); % for octave min is 1
 img_part_yb = min(box_y+1.5*box_size,img_h);
 img_part = img(img_part_yt:img_part_yb, img_part_xl:img_part_xr, :);
 
@@ -48,6 +50,6 @@ system("th context_encoder_run.lua");
 imfilled = imread('filled_logo_predWithContext.png');
 imfilled = imresize(imfilled,[size(img_part,1),size(img_part,2)]);
 img(img_part_yt:img_part_yb, img_part_xl:img_part_xr, :) = imfilled;
-imwrite(img,'finished_product.png');
+imwrite(img,'finished_product2.png');
 
 endfunction
