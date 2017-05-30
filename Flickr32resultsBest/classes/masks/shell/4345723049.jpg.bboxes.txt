@@ -1,0 +1,2 @@
+x y width height
+66 134 99 59

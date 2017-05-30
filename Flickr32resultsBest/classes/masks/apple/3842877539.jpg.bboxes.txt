@@ -1,0 +1,2 @@
+x y width height
+92 31 55 43

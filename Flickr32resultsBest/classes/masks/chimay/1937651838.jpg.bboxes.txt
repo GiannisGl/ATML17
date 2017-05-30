@@ -1,0 +1,2 @@
+x y width height
+70 72 75 95

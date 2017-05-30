@@ -1,0 +1,2 @@
+x y width height
+38 68 58 103

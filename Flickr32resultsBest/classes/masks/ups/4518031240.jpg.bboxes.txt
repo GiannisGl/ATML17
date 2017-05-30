@@ -1,0 +1,2 @@
+x y width height
+47 59 74 88

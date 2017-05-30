@@ -1,0 +1,2 @@
+x y width height
+72 78 79 91

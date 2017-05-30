@@ -1,0 +1,2 @@
+x y width height
+82 76 67 55

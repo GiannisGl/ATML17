@@ -1,0 +1,2 @@
+x y width height
+68 68 103 98
