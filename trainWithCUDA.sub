@@ -1,0 +1,5 @@
+module load torch
+module load cudnn
+
+th /var/tmp/group5/trainOnClusterWithCuda.lua
+

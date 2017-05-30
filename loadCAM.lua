@@ -1,18 +1,23 @@
 require 'loadcaffe'
 require 'cudnn'
 require 'image'
-
+--matio = require 'matio'
 
 torch.setdefaulttensortype('torch.DoubleTensor')
 
-model = loadcaffe.load('CAM/models/deploy_alexnetplusCAM_imagenet.prototxt', 'CAM/models/alexnetplusCAM_imagenet.caffemodel', 'cudnn')
+--model = loadcaffe.load('CAM/models/deploy_alexnetplusCAM_imagenet.prototxt', 'CAM/models/alexnetplusCAM_imagenet.caffemodel', 'cudnn')
 --model = loadcaffe.load('CAM/models/deploy_googlenetCAM.prototxt', 'CAM/models/imagenet_googleletCAM_train_iter_120000.caffemodel', 'cudnn')
---model = torch.load("alexnetplusCAM.torchmodel")
+model = torch.load("alexnetplusCAM.torchmodel")
 model:insert(nn.Squeeze(),22)
+--model:remove(23)
+--model:insert(nn.Linear(512,1))
+--model:insert(nn.Sigmoid())
+cudnn.convert(model, cudnn)
 model:cuda()
 print(model)
+--local mod = model.modules
 
---torch.save("alexnetplusCAM.torchmodel", model)
+torch.save("alexnetplusCAM.torchmodel", model)
 
 data = image.load("CAM/dataset/new/001_im_prep.png", 3, "double")
 
@@ -24,16 +29,15 @@ data = data:cuda()
 output = model:forward(data)
 
 -- Extract and save softmax weights
-local mod = model.modules
-local weights_LR = mod[23].weight
-print(weights_LR:size())
-torch.save('weights_LR.dat',weights_LR)
+--local weights_LR = mod[23].weight:double()
+--print(weights_LR:size())
+--torch.save('weights_LR.dat',weights_LR:double(),'ascii')
 
 -- Extract and save CAM output
-local cam = mod[13].output
-print(cam:size())
-torch.save('cam.dat', cam)
+--local cam = mod[18].output
+--print(cam:size())
+--torch.save('cam.dat', cam:double(), 'ascii')
 
 --print(output)
 print(output:size())
-torch.save('output.dat', output)
+--torch.save('output.dat', output:double(), 'ascii')

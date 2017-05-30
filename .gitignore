@@ -1,4 +1,8 @@
 context-encoder/inpaintCenter/
 context-encoder/inpaintCenterModels.tar.gz
 *.torchmodel
-
+CAM/dataset
+*.t7
+*.torchmodel
+results
+*.zip
