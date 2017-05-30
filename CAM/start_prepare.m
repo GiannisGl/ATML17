@@ -29,14 +29,3 @@ for i=1:length(dirNames)
     end
 end    
 
-
-%input = imread('../dataset/Flickr32/classes/jpg/adidas/2399696288.jpg');
-%imshow(input)
-%size(input,3)
-%imgtmp=input(:,:,[1 1 1]);
-%size(imgtmp)
-%imshow(imgtmp)
-%input = imresize(input, [256 256]);
-%prepinput = prepare_image(input);
-
-%save('prepinput.mat','prepinput');
