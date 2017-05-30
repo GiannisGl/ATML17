@@ -4,7 +4,6 @@ context-encoder/inpaintCenterModels.tar.gz
 CAM/dataset
 *.t7
 *.torchmodel
-results
 *.zip
 jos_ids.txt
 myresults

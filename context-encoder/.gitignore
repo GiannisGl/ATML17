@@ -1,6 +1,5 @@
 dataset
 models/inpaintCenter*
-*result*
 *checkpoints*
 *cache*
 *png
