@@ -8,3 +8,4 @@ create_sub_dataset('CAM/dataset/Flickr32prepOriginal/', 'CAM/dataset/Flickr32Ori
 %data_augmentation('CAM/dataset/Flickr32separated/train/')
 %data_augmentation('CAM/dataset/Flickr32separated/val/')
 %data_augmentation('CAM/dataset/Flickr32separated/test/')
+

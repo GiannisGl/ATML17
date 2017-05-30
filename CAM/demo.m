@@ -3,7 +3,7 @@
 % for the online prediction, make sure you have complied matcaffe
 
 clear
-addpath('/xxx/yyy/caffe/matlab');
+% addpath('/xxx/yyy/caffe/matlab');
 
 imgID = 2; % 1 or 2
 img = imread(['img' num2str(imgID) '.jpg']);

@@ -5,6 +5,7 @@ require 'nn'
 require 'optim'
 require 'sys'
 
+<<<<<<< HEAD
 max_iters = 1 
 myBatch_size = 32
 trainstep = 1
@@ -50,6 +51,43 @@ print("valset size: "..tostring(valset:size()))
 --print("testset size: "..tostring(testset:size()))
 
 imgsize = trainset[1][1]:size()
+=======
+max_iters = 30
+myBatch_size = 32
+
+torch.setdefaulttensortype('torch.DoubleTensor')
+
+--model = loadcaffe.load('CAM/models/deploy_alexnetplusCAM_imagenet.prototxt', 'CAM/models/alexnetplusCAM_imagenet.caffemodel', 'cudnn')
+--modelname = 'modelFlickr32resizedOriginal.torchmodel'
+modelname = "alexnetplusCAMFlickr32CUDA.torchmodel"
+model = torch.load(modelname)
+--model:insert(nn.Squeeze(),22)
+--model:remove(23)
+--model:insert(nn.Linear(512,1))
+--model:insert(nn.Sigmoid())
+cudnn.convert(model, cudnn)
+model:cuda()
+
+--torch.save("alexnetplusCAMFlickr32CUDA.torchmodel", model)
+--print("new model for Flickr32 binary")
+--print(model)
+
+-- load train and test datasets
+name = 'Flickr32resizedFullAugmented'
+trainsetfilename = 'dataset'..name..'train.t7'
+trainset = torch.load(trainsetfilename)
+print("trainset loaded successfully")
+print("trainset size: "..tostring(trainset:size()))
+testsetfilename = 'dataset'..name..'test.t7'
+testset = torch.load(testsetfilename)
+print("testset loaded successfully")
+print("testset size: "..tostring(testset:size()))
+
+print("train dataset size: "..tostring(trainset:size()))
+print("test dataset size: "..tostring(testset:size()))
+
+imgsize = dataset[1][1]:size()
+>>>>>>> 67e16ca2d85a3ed989eb03b3906bb7d08ea1105d
 channels = imgsize[1]
 imgwidth = imgsize[2]
 imgheight = imgsize[3]
@@ -61,7 +99,11 @@ criterion:cuda()
 
 -- define the descent algorithm
 sgd_params = {
+<<<<<<< HEAD
    learningRate = 1e-4,
+=======
+   learningRate = 1e-2,
+>>>>>>> 67e16ca2d85a3ed989eb03b3906bb7d08ea1105d
    learningRateDecay = 1e-4,
    weightDecay = 1e-3,
    momentum = 1e-4
@@ -132,6 +174,7 @@ eval = function(dataset, batch_size)
         loss = loss + criterion:forward(outputs, targets)
     end
     model:zeroGradParameters()
+
     return loss
 end
 
@@ -166,7 +209,6 @@ print(string.format('Loss on the test set: %4f', test_loss))
 
 modelfilename = '/var/tmp/group5/modeloneIter'..name..trainstep..'.torchmodel'
 torch.save(modelfilename,model_last)
-
 
 -- test accuracy
 threshold = 0.5

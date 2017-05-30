@@ -11,7 +11,7 @@ function prepare_dataset(folder)
         curdir = folder.."/"..dir
         print(curdir)
         for file in lfs.dir(curdir) do
-          --if #dataset >= 20 then break end
+        --if #dataset >= 20 then break end
           if file ~= '.' and file ~= '..' then
             curfile = curdir.."/"..file
             print(curfile)

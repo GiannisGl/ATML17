@@ -6,3 +6,7 @@ CAM/dataset
 *.torchmodel
 results
 *.zip
+jos_ids.txt
+myresults
+context-encoder/octave-workspace
+

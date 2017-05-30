@@ -1,4 +1,4 @@
-function crops_data = prepare_image2(im)
+function imgprep = prepare_image2(im)
 % ------------------------------------------------------------------------
 % caffe/matlab/+caffe/imagenet/ilsvrc_2012_mean.mat contains mean_data that
 % is already in W x H x C with BGR channels
@@ -15,4 +15,7 @@ im_data = single(im_data);  % convert from uint8 to single
 im_data = imresize(im_data, [IMAGE_DIM IMAGE_DIM], 'bilinear');  % resize im_data
 im_data = im_data - mean_data;  % subtract mean_data (already in W x H x C, BGR)
 
-crops_data = imresize(im_data, [CROPPED_DIM CROPPED_DIM], 'bilinear');
+imgprep = imresize(im_data, [CROPPED_DIM, CROPPED_DIM], 'bilinear');
+
+end
+
